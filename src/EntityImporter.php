@@ -17,6 +17,7 @@ use Wikibase\Lib\Store\EntityStore;
 use Wikibase\Repo\WikibaseRepo;
 use DataValues\UnboundedQuantityValue;
 use Wikibase\DataModel\Entity\ItemId;
+use Wikibase\DataModel\Entity\PropertyId;
 
 class EntityImporter
 {
@@ -71,18 +72,32 @@ class EntityImporter
         $stashedEntities = array();
 
         foreach ($batches as $batch) {
-            $entities = $this->apiEntityLookup->getEntities($batch);
-
+            $batch_new = [];
+            foreach ($batch as $key => $id) {
+                $newId = NULL;
+                if (substr($id, 0, 1) == 'Q') {
+                    $newId = $this->entityMappingStore->getLocalId(new ItemId($id));
+                }
+                if (substr($id, 0, 1) == 'P') {
+                    $newId = $this->entityMappingStore->getLocalId(new PropertyId($id));
+                }
+                if ($newId == NULL || $newId == '') {
+                    array_push($batch_new, $id);
+                }
+            }
+            $entities = $this->apiEntityLookup->getEntities($batch_new);
             if ($entities) {
                 $this->importBadgeItems($entities);
             } else {
-                $this->logger->error('Failed to retrieve items for batch');
+                if (count($batch_new) != 0) {
+                    $this->logger->error('Failed to retrieve items for batch');
+                }
             }
-
-            $stashedEntities = array_merge($stashedEntities, $this->importBatch($batch));
+            $stashedEntities = array_merge($stashedEntities, $this->importBatch($batch_new));
         }
 
         if ($importStatements === true) {
+            $stashedEntities = array_merge($stashedEntities, $this->importBatch($batch));
             foreach ($stashedEntities as $entity) {
                 $referencedEntities = $this->getReferencedEntities($entity);
                 $this->importEntities($referencedEntities, false);
