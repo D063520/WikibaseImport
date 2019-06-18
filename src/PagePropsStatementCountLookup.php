@@ -20,7 +20,7 @@ class PagePropsStatementCountLookup implements StatementsCountLookup {
 			array( 'page_props', 'page' ),
 			array( 'pp_value' ),
 			array(
-				'page_namespace' => 0,
+				#'page_namespace' => 0,
 				'page_title' => $entityId->getSerialization(),
 				'pp_propname' => 'wb-claims'
 			),
