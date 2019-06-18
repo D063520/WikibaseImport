@@ -168,8 +168,8 @@ class EntityImporter
 		$entity->getStatements()->addStatement(new Statement(new PropertyValueSnak(new PropertyId('P1000000'), new StringValue( (string) $entity->getId() )),null,null,null));
 		
 		$localId = $this->entityMappingStore->getLocalId($entity->getId());
-
-                if ($localId && !$this->statementsCountLookup->hasStatements($localId)) {
+		echo $this->statementsCountLookup->getStatementCount($localId);
+		if ($localId && $this->statementsCountLookup->getStatementCount($localId)<2) {
                     $this->statementsImporter->importStatements($entity_new);
                 } else {
                     $this->logger->info(
